@@ -1,5 +1,7 @@
 /node_modules
 .vscode
 .env
-/generated-site
-jarvis-memory.json
+/generated-content
+/history
+conversation_history.json
+memory_index.json

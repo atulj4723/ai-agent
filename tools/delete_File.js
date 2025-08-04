@@ -1,10 +1,22 @@
 import fs from "fs";
-import path from "path";
-export const delete_File = ({ fileName, folderName = "default" }) => {
-    const filePath = path.join("./generated-content", folderName, fileName);
+export const delete_File = ({ filePath }) => {
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         return `🗑️ Deleted ${filePath}`;
     }
-    return `❌ ${fileName} not found in ${folderName}`;
+    return `❌ File not found at ${filePath}`;
+};
+export const deleteDescription = {
+    name: "delete_File",
+    description: "Delete a specified file from the system.",
+    parameters: {
+        type: "object",
+        properties: {
+            filePath: {
+                type: "string",
+                description: "The full path to the file that will be deleted.",
+            },
+        },
+        required: ["filePath"],
+    },
 };

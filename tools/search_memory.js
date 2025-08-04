@@ -28,3 +28,18 @@ export const search_memory = ({ query }) => {
         results.length
     } relevant memory blocks. Summaries & keys: ${JSON.stringify(resultForAI)}`;
 };
+export const searchMemoryDescription={
+    name: "search_memory",
+    description: "Searches the long-term memory archives to find relevant past conversations. Use this as the FIRST step when the user asks about something not in the recent chat.",
+    parameters: {
+        type: "object",
+        properties: {
+            query: {
+                type: "string",
+                description:
+                    "A search query describing the topic you are looking for.",
+            },
+        },
+        required: ["query"],
+    },
+}

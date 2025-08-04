@@ -43,6 +43,9 @@ export const summarizeConversation = async (conversation) => {
         }
         
         const summaryKey = `summary-${Date.now()}.json`;
+        if (!fs.existsSync(conversationHistoryAllTimeFolder)) {
+            fs.mkdirSync(conversationHistoryAllTimeFolder, { recursive: true });
+        }
         const historyPath = path.join(
             conversationHistoryAllTimeFolder,
             summaryKey

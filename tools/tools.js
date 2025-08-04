@@ -1,147 +1,72 @@
-import { Type } from "@google/genai";
+import { appendDescription } from "./append_File.js";
+import { createDescription } from "./create_File.js";
+import { deleteDescription } from "./delete_File.js";
+import { readDescription } from "./read_File.js";
+//import { listDescription } from "./list_Files.js";
+import { generateDescription } from "./generate_MultiPageWebsite.js";
+import { run_CommandDescription } from "./run_Command.js";
+import { runSearchDescription } from "./runSearch.js";
+import { searchMemoryDescription } from "./search_memory.js";
+import { searchParticularMemoryDescription } from "./search_particular_memory.js";
+import { analyzeImageDescription } from "./analyze_image.js";
+import { generateDirectoryTreeDescription } from "./generate_directory_tree.js";
 
-
-export const tools = [
+const tools = [
     {
         functionDeclarations: [
-            {
-                name: "create_File",
-                description: "Create file with content",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        fileName: { type: Type.STRING },
-                        folderName: { type: Type.STRING },
-                        content: { type: Type.STRING },
-                    },
-                    required: ["fileName", "content"],
-                },
-            },
-            {
-                name: "read_File",
-                description: "Read file content",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        fileName: { type: Type.STRING },
-                        folderName: { type: Type.STRING },
-                    },
-                    required: ["fileName"],
-                },
-            },
-            {
-                name: "delete_File",
-                description: "Delete a file",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        fileName: { type: Type.STRING },
-                        folderName: { type: Type.STRING },
-                    },
-                    required: ["fileName"],
-                },
-            },
-            {
-                name: "list_Files",
-                description: "List files in a folder",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        folderName: { type: Type.STRING },
-                    },
-                    required: [],
-                },
-            },
-            {
-                name: "append_File",
-                description: "Append content to file",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        fileName: { type: Type.STRING },
-                        folderName: { type: Type.STRING },
-                        content: { type: Type.STRING },
-                    },
-                    required: ["fileName", "content"],
-                },
-            },
-            {
-                name: "generate_MultiPageWebsite",
-                description: "Generate a multi-page static website",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        folder: { type: Type.STRING },
-                        pages: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    content: { type: Type.STRING },
-                                },
-                                required: ["name", "content"],
-                            },
-                        },
-                    },
-                    required: ["pages"],
-                },
-            },
-            {
-                name: "run_Command",
-                description: "Execute a shell command",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        command: { type: Type.STRING },
-                    },
-                    required: ["command"],
-                },
-            },
-            {
-                name: "runSearch",
-                description:
-                    "Run a search query.Searches the web for information.",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        query: { type: Type.STRING },
-                    },
-                    required: ["query"],
-                },
-            },
-            {
-                name: "search_memory",
-                description:
-                    "Searches the long-term memory archives to find relevant past conversations. Use this as the FIRST step when the user asks about something not in the recent chat.",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        query: {
-                            type: Type.STRING,
-                            description:
-                                "A search query describing the topic you are looking for.",
-                        },
-                    },
-                    required: ["query"],
-                },
-            },
-            {
-                name: "search_particular_memory",
-                description:
-                    "SECOND step. After finding a memory with 'search_memory_archives', use this tool with the 'summary_key' to retrieve the full, detailed conversation content.",
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        query: {
-                            type: Type.STRING,
-                            description:
-                                "The summary_key of the memory you want to retrieve.The unique key for the archive file, e.g., 'summary-123456789.json'.",
-                        },
-                    },
-                    required: ["query"],
-                },
-            },
+            createDescription,
+            readDescription,
+            deleteDescription,
+            //listDescription,
+            appendDescription,
+            generateDescription,
+            run_CommandDescription,
+            runSearchDescription,
+            searchMemoryDescription,
+            searchParticularMemoryDescription,
+            analyzeImageDescription,
+            generateDirectoryTreeDescription
         ],
     },
 ];
+const systemInstruction = `
+## Core Directive
+You are JARVIS, a powerful and efficient command-line AI assistant. Your responses must be accurate, concise, and immediately useful.
+
+---
+
+## Response Protocol
+- **Output Format:** You MUST respond in plain text only. Do not use Markdown, HTML, or any other formatting.
+- **Conciseness:** Your default answers must be short and direct, ideally 4-5 sentences. Provide more detail only when the user explicitly asks for it.
+- **Clarity:** If the user's request is ambiguous or unclear, you must ask for clarification before proceeding.
+
+---
+
+## Information & Tool Protocol
+- **Knowledge Gaps:** If you do not know the answer to a question, you MUST use the 'runSearch' tool to find the information on the web. Do not invent answers.
+- **Tool Usage:** Always use your tools correctly and validate the input parameters. You are responsible for executing tasks as requested.
+
+---
+- **File Operations:** When performing file operations, always use the 'generate_directory_tree' tool to get the current directory structure. 
+This ensures you have the correct file paths.
+- **File Paths:** Always use absolute paths for file operations to avoid confusion and ensure reliability.
+- while perform any operation on file perform in generated-content folder, if not specified use default folder.
+---
+## CRITICAL: Long-Term Memory Protocol
+Your memory is divided into a short-term active conversation and a long-term searchable archive. Accessing the archive is a strict, two-step process.
+
+**Step 1: SEARCH**
+- To recall any information that is not in the immediate, active conversation, you MUST FIRST use the 'search_memory' tool.
+- Provide a concise search query (e.g., "file creation", "website project") to this tool.
+- The tool will return a list of relevant memory summaries and their unique keys (e.g., 'summary-12345.json').
+
+**Step 2: RETRIEVE**
+- After you have identified the correct memory block from the search results, you MUST use the 'search_particular_memory' tool.
+- Provide the exact 'key' from the search results to this tool to get the full, detailed content of that memory.
+
+**MANDATORY RULE:** NEVER assume you have the full history. Always follow the SEARCH then RETRIEVE protocol to access long-term memory. Do not try to access memory in any other way.
+`;
+export const AIconfig = {
+    tools,
+    systemInstruction,
+};

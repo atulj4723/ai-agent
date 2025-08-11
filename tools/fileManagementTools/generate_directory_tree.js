@@ -22,13 +22,10 @@ function buildTreeString(dir, exclude, prefix) {
     return tree;
 }
 
-export function generate_directory_tree() {
-    const rootDir = "."; // Always start from the project root
-    const excludeFolders = [".git", "node_modules", ".env"];
-console.log(`Generating directory tree from root: ${rootDir}`);
+export function generate_directory_tree({ rootDir = "." }) {
+    const excludeFolders = [".git", "node_modules", ".next",".env", "venv","new_env", ".venv"];
     let finalTree = `${path.basename(path.resolve(rootDir))}\n`;
     finalTree += buildTreeString(rootDir, excludeFolders, "");
-
     return finalTree;
 }
 export const generateDirectoryTreeDescription = {
@@ -37,7 +34,15 @@ export const generateDirectoryTreeDescription = {
         "Generate a directory tree structure of the project, excluding specific folders.",
     parameters: {
         type: "object",
-        properties: {},
+        properties: {
+            rootDir: {
+                type: "string",
+                description:
+                    "The root directory to generate the tree from. Defaults to the current directory.You can specify a relative or absolute path.Also caan also pass parent directory using '..' or './' to specify the current directory.",
+                default: ".",
+            },
+        },
         required: [],
     },
 };
+

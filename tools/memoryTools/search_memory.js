@@ -1,4 +1,4 @@
-import { loadMemoryIndex } from "../memory/loadMemoryIndex.js";
+import { loadMemoryIndex } from "../../memory/loadMemoryIndex.js";
 
 export const search_memory = ({ query }) => {
     const memoryIndex = loadMemoryIndex();

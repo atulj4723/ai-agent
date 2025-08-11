@@ -1,0 +1,3 @@
+- Task: Create README.md file in root folder.And add updated details according to current codebase. Last completed: 2025-08-9 3:09 pm
+- Task: Create portfolio in 5 days. Last completed: Never
+- Task: Join meeting at 9 am. Last completed: Never

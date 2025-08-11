@@ -12,8 +12,16 @@ const rl = readline.createInterface({
 // Load conversation history
 let conversation = loadConversationHistory() || [];
 printBanner();
-speak("Welcome to JARVIS CLI AI Assistant! Type 'quit' to exit.");
+//speak("Welcome to JARVIS CLI AI Assistant! Type 'quit' to exit.");
 (async () => {
+    // Initial system prompt
+    speak("Activating JARVIS system...");
+    const startupPrompt = "System activated. Acknowledge status and check for daily tasks as per your core directive.Give initial response as good morning or good afternoon or good evening based on current time.And say 'Jarvis is ready. How can I assist you today?'";
+    conversation.push({ role: "user", parts: [{ text: startupPrompt }] });
+    await processAIResponse(conversation);
+    conversation = await summarizeConversation(conversation);
+    saveConversationHistory(conversation);
+   // speak("Jarvis is ready. How can I assist you today?");
     while (true) {
         const input = await new Promise((resolve) =>
             rl.question("You: ", resolve)

@@ -32,7 +32,7 @@ export const summarizeConversation = async (conversation) => {
         let keywords = [];
         try {
             keywords = JSON.parse(
-                keywordsResult.response.text().replace(/```json\n?|```/g, "")
+                keywordsResult.candidates[0].content.parts[0].text.replace(/```json\n?|```/g, "")
             );
         } catch {
             keywords = summary

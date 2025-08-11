@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { ai } from "../config.js";
+import { ai } from "../../config.js";
+import { create_File } from "../fileManagementTools/create_File.js";
 
 function getMimeType(filePath) {
     const ext = path.extname(filePath).toLowerCase();
@@ -46,8 +47,11 @@ export async function analyze_image({ file_path, question }) {
             model: "gemini-2.5-flash",
             contents: [{ role: "user", parts: promptParts }],
         });
-
-        const responseText = result.response.text();
+        create_File({
+            filePath: "generated-content/last_analyzed_image.txt",
+            content: `Last analyzed image: ${JSON.stringify(result)}`,
+        });
+        const responseText = result.candidates[0]?.content?.parts[0]?.text || "No response text available.";
         return `Analysis of ${path.basename(file_path)}: ${responseText}`;
     } catch (error) {
         console.error("Error analyzing image:", error);

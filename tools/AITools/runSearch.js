@@ -1,4 +1,4 @@
-import { ai } from "../config.js";
+import { ai } from "../../config.js";
 export const runSearch = async ({ query }) => {
     const groundingTool = { googleSearch: {} };
     const config = { tools: [groundingTool] };

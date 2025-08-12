@@ -1,39 +1,61 @@
-import { loadConversationHistory } from "./memory/loadConversationHistory.js";
-import readline from "readline";
-import { printBanner } from "./utils/banner.js";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 import { processAIResponse } from "./ai/processAIResponse.js";
-import { summarizeConversation } from "./ai/summarizeConversation.js";
+import { loadConversationHistory } from "./memory/loadConversationHistory.js";
 import { saveConversationHistory } from "./memory/saveConversationHistory.js";
-import { speak } from "./utils/speak.js";
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-// Load conversation history
-let conversation = loadConversationHistory() || [];
-printBanner();
-//speak("Welcome to JARVIS CLI AI Assistant! Type 'quit' to exit.");
-(async () => {
-    // Initial system prompt
-    speak("Activating JARVIS system...");
-    const startupPrompt = "System activated. Acknowledge status and check for daily tasks as per your core directive.Give initial response as good morning or good afternoon or good evening based on current time.And say 'Jarvis is ready. How can I assist you today?'";
-    conversation.push({ role: "user", parts: [{ text: startupPrompt }] });
+import { summarizeConversation } from "./ai/summarizeConversation.js";
+
+async function processsTask(conversation, respond) {
     await processAIResponse(conversation);
     conversation = await summarizeConversation(conversation);
     saveConversationHistory(conversation);
-   // speak("Jarvis is ready. How can I assist you today?");
-    while (true) {
-        const input = await new Promise((resolve) =>
-            rl.question("You: ", resolve)
-        );
-        if (input.toLowerCase() === "quit") {
-            speak("Session ended. Goodbye.");
-            rl.close();
-            break;
-        }
-        conversation.push({ role: "user", parts: [{ text: input }] });
-        await processAIResponse(conversation);
-        conversation = await summarizeConversation(conversation);
-        saveConversationHistory(conversation);
-    }
-})();
+    respond(conversation);
+}
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+const port = 3000;
+
+// Set up EJS as the view engine
+app.set("views", "./views");
+app.set("view engine", "ejs");
+// Serve the main web page from the root URL
+app.get("/", (req, res) => {
+    res.render("index");
+});
+let conversation = (await loadConversationHistory()) || [];
+
+// Handle the real-time communication
+io.on("connection", (socket) => {
+    console.log("A user connected via web browser.");
+
+    // You can load conversation history per-session if needed
+    // Example: start with a fresh conversation
+    socket.emit("jarvis_response", conversation);
+    // Listen for a 'user_command' event from the browser
+    socket.on("user_command", async (command) => {
+        conversation.push({ role: "user", parts: [{ text: command }] });
+
+        // This function will be used by JARVIS to send messages back to this specific user
+        const respond = (text) => {
+            socket.emit("jarvis_response", text);
+        };
+
+        // Call your main AI logic, passing it the conversation and the way to respond
+        await processsTask(conversation, respond);
+
+        // You would still save the history after the interaction
+        // saveConversationHistory(conversation);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected.");
+    });
+});
+
+httpServer.listen(port, () => {
+    console.log(`JARVIS is now accessible at http://localhost:${port}`);
+});

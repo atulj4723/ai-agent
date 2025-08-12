@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>J.A.R.V.I.S. Interface</title>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .header {
+                background-color: #282c34;
+                color: white;
+                padding: 10px;
+                text-align: center;
+                font-size: 24px;
+            }
+
+            #messages {
+                height: calc(100vh - 100px);
+                overflow-y: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                background-color: #f0f0f0;
+                list-style-type: none;
+                padding: 0;
+            }
+            #messages li {
+                margin: 15px;
+                padding: 10px;
+                border-radius: 5px;
+                max-width: 80%;
+            }
+            .user-message {
+                background-color: #d1e7dd;
+                align-self: flex-end;
+                margin-left: auto;
+            }
+            .jarvis-message {
+                background-color: #cfe2ff;
+                align-self: flex-start;
+                margin-right: auto;
+            }
+            .typing-indicator {
+                display: flex;
+                align-items: center;
+                color: #6c757d;
+            }
+            .typing-indicator span {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                margin: 0 2px;
+                border-radius: 50%;
+                background-color: #6c757d;
+                animation: blink 1s infinite;
+            }
+            @keyframes blink {
+                0%,
+                20% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.5;
+                }
+                100% {
+                    opacity: 1;
+                }
+            }
+            #form {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                display: flex;
+                background-color: #fff;
+                padding: 10px;
+                box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            }
+            #input-container {
+                flex: 1;
+                display: flex;
+            }
+            #input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ced4da;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            #input:focus {
+                outline: none;
+                border-color: #80bdff;
+            }
+            button {
+                padding: 10px 15px;
+                margin-left: 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            button:focus {
+                outline: none;
+            }
+            .header-title {
+                font-family: "Courier New", Courier, monospace;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="header-title">J.A.R.V.I.S.</div>
+        </div>
+
+        <div id="messages"></div>
+
+        <form id="form" action="">
+            <div id="input-container">
+                <input
+                    id="input"
+                    autocomplete="on"
+                    placeholder="Enter command..."
+                    autofocus />
+                <button type="submit">-></button>
+            </div>
+        </form>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            const socket = io();
+            const form = document.getElementById("form");
+            const input = document.getElementById("input");
+            const messages = document.getElementById("messages");
+            let typingIndicator;
+
+            // Handles sending a command from the user
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                if (input.value) {
+                    socket.emit("user_command", input.value);
+                    addMessage(input.value, "user-message");
+                    input.value = "";
+                    showTypingIndicator();
+                }
+            });
+
+            // Listens for the SINGLE, NEW response from JARVIS
+            socket.on("jarvis_response", (conversationHistory) => {
+                hideTypingIndicator();
+                messages.innerHTML = ""; // Clear all previous messages
+
+                conversationHistory.forEach((message, index) => {
+                    if (
+                        message.parts &&
+                        message.parts[0] &&
+                        message.parts[0].text &&
+                        index != 0
+                    ) {
+                        if (message.role === "user") {
+                            addMessage(message.parts[0].text, "user-message");
+                        } else if (
+                            message.role === "model" &&
+                            index == conversationHistory.length - 1
+                        ) {
+                            scrollToBottom();
+                            typewriterEffect(
+                                message.parts[0].text,
+                                "jarvis-message"
+                            );
+                        } else {
+                            addMessage(message.parts[0].text, "jarvis-message");
+                        }
+                    }
+                });
+            });
+
+            // Helper function to add a message bubble instantly
+            function addMessage(text, className) {
+                const item = document.createElement("li");
+                item.textContent = text;
+                item.className = className;
+                messages.appendChild(item);
+            }
+
+            // Helper function to add a message with a typewriter effect
+            function typewriterEffect(text, className) {
+                const item = document.createElement("li");
+                item.className = className;
+                messages.appendChild(item);
+
+                let i = 0;
+                const speed = 25; // Speed in milliseconds
+                function type() {
+                    if (i < text.length) {
+                        item.textContent += text.charAt(i);
+                        i++;
+                        scrollToBottom();
+                        setTimeout(type, speed);
+                    }
+                }
+                type();
+            }
+
+            function showTypingIndicator() {
+                if (typingIndicator) return;
+                typingIndicator = document.createElement("li");
+                typingIndicator.className = "typing-indicator";
+                typingIndicator.innerHTML =
+                    "<span></span><span></span><span></span>";
+                messages.appendChild(typingIndicator);
+                scrollToBottom();
+            }
+
+            function hideTypingIndicator() {
+                if (typingIndicator) {
+                    messages.removeChild(typingIndicator);
+                    typingIndicator = null;
+                }
+            }
+            function scrollToBottom() {
+                messages.scrollTop = messages.scrollHeight;
+            }
+        </script>
+    </body>
+</html>

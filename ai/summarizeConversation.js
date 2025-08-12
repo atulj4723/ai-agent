@@ -32,7 +32,10 @@ export const summarizeConversation = async (conversation) => {
         let keywords = [];
         try {
             keywords = JSON.parse(
-                keywordsResult.candidates[0].content.parts[0].text.replace(/```json\n?|```/g, "")
+                keywordsResult.candidates[0].content.parts[0].text.replace(
+                    /```json\n?|```/g,
+                    ""
+                )
             );
         } catch {
             keywords = summary
@@ -41,7 +44,7 @@ export const summarizeConversation = async (conversation) => {
                 .filter((word) => word.length > 3)
                 .slice(0, 5); // Fallback
         }
-        
+
         const summaryKey = `summary-${Date.now()}.json`;
         if (!fs.existsSync(conversationHistoryAllTimeFolder)) {
             fs.mkdirSync(conversationHistoryAllTimeFolder, { recursive: true });
@@ -51,7 +54,6 @@ export const summarizeConversation = async (conversation) => {
             summaryKey
         );
         fs.writeFileSync(historyPath, JSON.stringify(toSummarize, null, 2));
-
         let memoryIndex = loadMemoryIndex();
         memoryIndex.push({
             key: summaryKey,

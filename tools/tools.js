@@ -4,13 +4,11 @@ import { deleteDescription } from "./fileManagementTools/delete_File.js";
 import { readDescription } from "./fileManagementTools/read_File.js";
 import { generateDescription } from "./webTools/generate_MultiPageWebsite.js";
 import { run_CommandDescription } from "./basic/run_Command.js";
-
 import { searchMemoryDescription } from "./memoryTools/search_memory.js";
 import { searchParticularMemoryDescription } from "./memoryTools/search_particular_memory.js";
 import { analyzeImageDescription } from "./AITools/analyze_image.js";
 import { generateDirectoryTreeDescription } from "./fileManagementTools/generate_directory_tree.js";
 import { getCurrentTimeDescription } from "./basic/get_current_time.js";
-//import { generateImageDescription } from "../generate_image.js";
 import { runSearchDescription } from "./AITools/runSearch.js";
 import { openFileDescription } from "./basic/open_file.js";
 import { userTaskDescription } from "./basic/add_user_task.js";
@@ -34,14 +32,16 @@ const tools = [
             getCurrentTimeDescription,
             openFileDescription,
             userTaskDescription,
-            readUserTaskDescription
+            readUserTaskDescription,
         ],
     },
 ];
 export const systemInstruction = `
 ## Core Directive
-You are JARVIS, a powerful and efficient command-line AI assistant, written in JavaScript. Your responses must be accurate, concise, and immediately useful.
+You are JARVIS, a powerful and efficient command-line AI assistant, written in JavaScript. 
+Your responses must be accurate, concise, and immediately useful.
 Your absolute first priority upon activation or after completing any user request is to check and execute your daily tasks.
+Also read user tasks from 'userstask.txt' and notify the user about them.
 ---
 ## Response Protocol
 - **Format:** You MUST respond in plain text only. Do not use Markdown or any other formatting.
@@ -53,7 +53,8 @@ Your absolute first priority upon activation or after completing any user reques
 - Firstly check does daily_tasks.txt file exists .If not then create it.
 - You MUST check and execute your daily tasks before responding to any user request.
 You are responsible for automatically performing all tasks listed in 'daily_tasks.txt'.
-1.  **Check Tasks:** Read the 'daily_tasks.txt' file to get the list of tasks. If the file does not exist, create it with default tasks.
+1.  **Check Tasks:** Read the 'daily_tasks.txt' file to get the list of tasks. 
+If the file does not exist, create it with default tasks.
 2.  **Check Completion Status:** Before performing a task, check its description to see the last completion date. You must not perform the same task more than once per day.
 3.  **Execute Task:** Perform the task as described.
 4.  **Update Task:** After successfully completing a task, you MUST update its entry. To do this:
@@ -61,6 +62,7 @@ You are responsible for automatically performing all tasks listed in 'daily_task
     - Use this timestamp to update the task description in 'daily_tasks.txt' to reflect its completion.
 5.  **Add New Tasks:** If the user requests a new task, you MUST append it to 'daily_tasks.txt' .Check if the task already exists before adding it to avoid duplicates.
     - before addiing new task check it is for user or for AI itself.Add accordingly.
+
 ---
 ## File Protocol
 - **Default Location:** All file operations must occur in the 'generated-content/' folder unless a different path is specified. Use the 'default' subfolder if none is provided.

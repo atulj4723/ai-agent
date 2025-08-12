@@ -17,6 +17,7 @@ import { speak } from "../utils/speak.js";
 import { open_file } from "../tools/basic/open_file.js";
 import { add_user_task } from "../tools/basic/add_user_task.js";
 import { read_user_task } from "../tools/basic/read_user_task.js";
+import { schedule_task, set_reminder } from "../tools/basic/reminder.js";
 // === Tool  ===
 const toolFunctions = {
     create_File,
@@ -33,7 +34,9 @@ const toolFunctions = {
     get_current_time,
     open_file,
     add_user_task,
-    read_user_task
+    read_user_task,
+    set_reminder,
+    schedule_task,
 };
 
 export async function processAIResponse(conversation, retries = 0) {
@@ -46,6 +49,7 @@ export async function processAIResponse(conversation, retries = 0) {
             contents: conversation,
             config: AIconfig,
         });
+    
         const functionCall = response.functionCalls?.[0];
         if (functionCall) {
             const { name, args } = functionCall;
@@ -74,7 +78,7 @@ export async function processAIResponse(conversation, retries = 0) {
                 const text = parts[0].text;
                 conversation.push({ role: "model", parts });
                 saveConversationHistory(conversation);
-                speak(text);
+                return text;
             } else await processAIResponse(conversation, retries + 1);
         }
     } catch (err) {
